@@ -1,6 +1,7 @@
 // Modules to control application life and create native browser window
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
+const { spawn } = require("child_process");
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -9,9 +10,11 @@ let mainWindow;
 function createWindow() {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 400,
+    height: 400,
+    resizable: false,
     webPreferences: {
+      nodeIntegration: true,
       preload: path.join(__dirname, "preload.js")
     }
   });
@@ -20,7 +23,7 @@ function createWindow() {
   mainWindow.loadFile("index.html");
 
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools()
+  // mainWindow.webContents.openDevTools();
 
   // Emitted when the window is closed.
   mainWindow.on("closed", function() {
@@ -52,4 +55,28 @@ app.on("activate", function() {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
-require("./unblock/app.js");
+
+var unblock;
+ipcMain.on("start-unblock", (event, port) => {
+  let param = ["./unblock/app.js"];
+  if (port) {
+    param.push("-p", port);
+  }
+  unblock = spawn("node", param);
+  unblock.stdout.on("data", data => {
+    console.log(`stdout: ${data}`);
+    event.sender.send("unblock-begin", `stdout: ${data}`);
+  });
+  unblock.stderr.on("data", data => {
+    console.log(`stderr: ${data}`);
+    event.sender.send("unblock-error", `stderr: ${data}`);
+  });
+  unblock.on("close", code => {
+    console.log(`子进程退出，使用退出码 ${code}`);
+    event.sender.send("unblock-end", `子进程退出，使用退出码 ${code}`);
+  });
+});
+
+ipcMain.on("stop-unblock", event => {
+  unblock.kill("SIGHUP");
+});

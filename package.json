@@ -1,10 +1,12 @@
 {
   "name": "unblock-music",
   "version": "1.0.0",
-  "description": "A unblock music application",
+  "description": "a unblock music application",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "packMac": "electron-packager . --out=out --platform=mas --arch=x64",
+    "packWin": "electron-packager . --platform=win32 --arch=x64"
   },
   "repository": "https://github.com/electron/electron-quick-start",
   "keywords": [
@@ -17,6 +19,7 @@
   "author": "GitHub",
   "license": "CC0-1.0",
   "devDependencies": {
-    "electron": "^5.0.5"
+    "electron": "^5.0.5",
+    "electron-packager": "^14.0.0"
   }
 }

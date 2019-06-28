@@ -13,7 +13,7 @@ const config = require('./cli.js')
 .option(['-h', '--help'], {action: 'help'})
 .parse(process.argv)
 
-config.port = (config.port || '80:443').split(':').map(string => parseInt(string))
+config.port = (config.port || '9000:9001').split(':').map(string => parseInt(string))
 const invalid = value => (isNaN(value) || value < 1 || value > 65535)
 if(config.port.some(invalid)){
 	console.log('Port must be a number higher than 0 and lower than 65535.')

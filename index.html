@@ -1,15 +1,77 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="UTF-8">
-    <title>Hello World!</title>
+    <meta charset="UTF-8" />
+    <title>Unblock Music</title>
+
+    <style>
+      body {
+        background: pink;
+      }
+      button:focus,
+      input:focus {
+        outline: 0;
+      }
+      button,
+      div,
+      img {
+        -webkit-tap-highlight-color: transparent;
+      }
+      #title {
+        width: 100%;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        top: 80px;
+        color: #fff;
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+      }
+      #pac-address {
+        width: 300px;
+        height: 30px;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        top: 140px;
+        border-radius: 30px;
+        background: #bbbbbb;
+        color: #fff;
+        text-align: center;
+        font-size: 14px;
+        line-height: 28px;
+      }
+      #input-port {
+        width: 200px;
+        height: 30px;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        top: 200px;
+        border: 0;
+        border-radius: 30px;
+        text-align: center;
+      }
+      #btn-start {
+        width: 200px;
+        height: 30px;
+        position: absolute;
+        left: 50%;
+        top: 240px;
+        transform: translateX(-50%);
+        border: 0;
+        border-radius: 30px;
+        background-color: rgb(255, 101, 101);
+        color: #fff;
+      }
+    </style>
   </head>
   <body>
-    <h1>Hello World!</h1>
-    We are using Node.js <span id="node-version"></span>,
-    Chromium <span id="chrome-version"></span>,
-    and Electron <span id="electron-version"></span>.
-
+    <div id="title">Welcome to unblock-music</div>
+    <div id="pac-address">未开启</div>
+    <input id="input-port" type="text" value="8080:8081" />
+    <button id="btn-start">开启</button>
     <!-- You can also require other files to run in this process -->
     <script src="./renderer.js"></script>
   </body>

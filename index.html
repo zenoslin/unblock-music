@@ -22,25 +22,30 @@
         position: absolute;
         left: 50%;
         transform: translateX(-50%);
-        top: 80px;
+        top: 50px;
         color: #fff;
         text-align: center;
         font-size: 24px;
         font-weight: bold;
       }
-      #pac-address {
+      .address {
         width: 300px;
         height: 30px;
         position: absolute;
         left: 50%;
         transform: translateX(-50%);
-        top: 140px;
         border-radius: 30px;
         background: #bbbbbb;
         color: #fff;
         text-align: center;
         font-size: 14px;
         line-height: 28px;
+      }
+      #local-address {
+        top: 110px;
+      }
+      #network-address {
+        top: 150px;
       }
       #input-port {
         width: 200px;
@@ -69,7 +74,8 @@
   </head>
   <body>
     <div id="title">Welcome to unblock-music</div>
-    <div id="pac-address">未开启</div>
+    <div class="address" id="local-address">未开启</div>
+    <div class="address" id="network-address">未开启</div>
     <input id="input-port" type="text" value="8080:8081" />
     <button id="btn-start">开启</button>
     <!-- You can also require other files to run in this process -->

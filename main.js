@@ -31,6 +31,9 @@ function createWindow() {
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
     mainWindow = null;
+    if (unblock) {
+      unblock.kill((signal = "SIGTERM"));
+    }
     process.exit();
   });
 }
@@ -68,15 +71,17 @@ ipcMain.on("start-unblock", (event, port) => {
     event.sender.send("unblock-begin", `stdout: ${data}`);
   });
   unblock.stderr.on("data", data => {
+    unblock = null;
     console.log(`stderr: ${data}`);
     event.sender.send("unblock-error", `stderr: ${data}`);
   });
   unblock.on("close", code => {
+    unblock = null;
     console.log(`子进程退出，使用退出码 ${code}`);
     event.sender.send("unblock-end", `子进程退出，使用退出码 ${code}`);
   });
 });
 
 ipcMain.on("stop-unblock", event => {
-  unblock.kill("SIGHUP");
+  unblock.kill((signal = "SIGTERM"));
 });

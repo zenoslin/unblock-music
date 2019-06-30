@@ -5,10 +5,10 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "packMac": "electron-packager . --out=out --platform=mas --arch=x64",
-    "packWin": "electron-packager . --out=out --platform=win32 --arch=x64"
+    "packMac": "electron-packager . --out=out --platform=mas --arch=x64 --icon=assets/mac/icon.icns",
+    "packWin": "electron-packager . --out=out --platform=win32 --arch=x64 --icon=assets/win/icon.ico"
   },
-  "repository": "https://github.com/electron/electron-quick-start",
+  "repository": "https://github.com/zenoslin/unblock-music",
   "keywords": [
     "Electron",
     "quick",
@@ -17,7 +17,7 @@
     "demo"
   ],
   "author": "GitHub",
-  "license": "CC0-1.0",
+  "license": "TIM",
   "devDependencies": {
     "electron": "^5.0.5",
     "electron-packager": "^13.0.1"

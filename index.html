@@ -6,7 +6,7 @@
 
     <style>
       body {
-        background: pink;
+        background: #202020;
       }
       button:focus,
       input:focus {
@@ -28,24 +28,39 @@
         font-size: 24px;
         font-weight: bold;
       }
+      .text {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        color: #fff;
+      }
+      #local-text {
+        top: 100px;
+      }
+      #network-text {
+        top: 180px;
+      }
       .address {
-        width: 300px;
+        width: 360px;
         height: 30px;
         position: absolute;
         left: 50%;
         transform: translateX(-50%);
         border-radius: 30px;
-        background: #bbbbbb;
-        color: #fff;
+        background: #c7c7c7;
+        color: #000;
         text-align: center;
         font-size: 14px;
         line-height: 28px;
       }
       #local-address {
-        top: 110px;
+        top: 130px;
       }
       #network-address {
-        top: 150px;
+        top: 210px;
+      }
+      #port-text{
+        bottom: 180px;
       }
       #input-port {
         width: 200px;
@@ -53,7 +68,7 @@
         position: absolute;
         left: 50%;
         transform: translateX(-50%);
-        top: 200px;
+        bottom: 140px;
         border: 0;
         border-radius: 30px;
         text-align: center;
@@ -66,24 +81,43 @@
         transform: translateX(-50%);
         border: 0;
         border-radius: 30px;
-        background-color: rgb(255, 101, 101);
+        background-color: #d13d36;
         color: #fff;
       }
       #btn-start {
-        top: 240px;
+        bottom: 80px;
       }
       #btn-dev {
         top: 320px;
+      }
+      .foot {
+        width: 100%;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        bottom: 10px;
+        color: #fff;
+        text-align: center;
+        font-size: 12px;
       }
     </style>
   </head>
   <body>
     <div id="title">Welcome to unblock-music</div>
+    <div class="text" id="local-text">本地地址</div>
     <div class="address" id="local-address">未开启</div>
+    <div class="text" id="network-text">局域网地址</div>
     <div class="address" id="network-address">未开启</div>
+    <div class="text" id="port-text">指定端口</div>
     <input id="input-port" type="text" value="8080:8081" />
     <button class="btn" id="btn-start">开启</button>
-    <button class="btn" id="btn-dev">开发者工具</button>
+    <div class="foot">
+      E-mail：zenoslin@outlook.com <br />
+      Github：https://github.com/zenoslin/unblock-music</a>
+    </div>
+    <div class="foot"></div>
+    <!-- 开发者工具 -->
+    <!-- <button class="btn" id="btn-dev">开发者工具</button> -->
     <!-- You can also require other files to run in this process -->
     <script src="./renderer.js"></script>
   </body>

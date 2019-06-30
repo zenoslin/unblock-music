@@ -11,8 +11,8 @@ let mainWindow;
 function createWindow() {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 400,
-    height: 400,
+    width: 420,
+    height: 480,
     resizable: false,
     webPreferences: {
       nodeIntegration: true,
@@ -32,9 +32,6 @@ function createWindow() {
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
     mainWindow = null;
-    // if (unblock) {
-    //   unblock.kill((signal = "SIGTERM"));
-    // }
     process.exit();
   });
 }
@@ -65,30 +62,10 @@ ipcMain.on("start-unblock", (event, port) => {
   unblock(port, function() {
     event.sender.send("unblock-begin");
   });
-  // let param = ["./unblock/app.js"];
-  // if (port) {
-  //   param.push("-p", port);
-  // }
-  // unblock = spawn("node", param);
-  // unblock.stdout.on("data", data => {
-  //   console.log(`stdout: ${data}`);
-  //   event.sender.send("unblock-begin", `stdout: ${data}`);
-  // });
-  // unblock.stderr.on("data", data => {
-  //   unblock = null;
-  //   console.log(`stderr: ${data}`);
-  //   event.sender.send("unblock-error", `stderr: ${data}`);
-  // });
-  // unblock.on("close", code => {
-  //   unblock = null;
-  //   console.log(`子进程退出，使用退出码 ${code}`);
-  //   event.sender.send("unblock-end", `子进程退出，使用退出码 ${code}`);
-  // });
 });
 
 ipcMain.on("stop-unblock", event => {
   cancelUnblock();
-  // unblock.kill((signal = "SIGTERM"));
 });
 
 ipcMain.on("open-dev-tool", event => {

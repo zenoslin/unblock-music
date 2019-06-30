@@ -2,6 +2,7 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const path = require("path");
 const { spawn } = require("child_process");
+const { unblock, cancelUnblock } = require("./unblock/app.js");
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -31,9 +32,9 @@ function createWindow() {
     // in an array if your app supports multi windows, this is the time
     // when you should delete the corresponding element.
     mainWindow = null;
-    if (unblock) {
-      unblock.kill((signal = "SIGTERM"));
-    }
+    // if (unblock) {
+    //   unblock.kill((signal = "SIGTERM"));
+    // }
     process.exit();
   });
 }
@@ -59,29 +60,37 @@ app.on("activate", function() {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and require them here.
 
-var unblock;
+// var unblock;
 ipcMain.on("start-unblock", (event, port) => {
-  let param = ["./unblock/app.js"];
-  if (port) {
-    param.push("-p", port);
-  }
-  unblock = spawn("node", param);
-  unblock.stdout.on("data", data => {
-    console.log(`stdout: ${data}`);
-    event.sender.send("unblock-begin", `stdout: ${data}`);
+  unblock(port, function() {
+    event.sender.send("unblock-begin");
   });
-  unblock.stderr.on("data", data => {
-    unblock = null;
-    console.log(`stderr: ${data}`);
-    event.sender.send("unblock-error", `stderr: ${data}`);
-  });
-  unblock.on("close", code => {
-    unblock = null;
-    console.log(`子进程退出，使用退出码 ${code}`);
-    event.sender.send("unblock-end", `子进程退出，使用退出码 ${code}`);
-  });
+  // let param = ["./unblock/app.js"];
+  // if (port) {
+  //   param.push("-p", port);
+  // }
+  // unblock = spawn("node", param);
+  // unblock.stdout.on("data", data => {
+  //   console.log(`stdout: ${data}`);
+  //   event.sender.send("unblock-begin", `stdout: ${data}`);
+  // });
+  // unblock.stderr.on("data", data => {
+  //   unblock = null;
+  //   console.log(`stderr: ${data}`);
+  //   event.sender.send("unblock-error", `stderr: ${data}`);
+  // });
+  // unblock.on("close", code => {
+  //   unblock = null;
+  //   console.log(`子进程退出，使用退出码 ${code}`);
+  //   event.sender.send("unblock-end", `子进程退出，使用退出码 ${code}`);
+  // });
 });
 
 ipcMain.on("stop-unblock", event => {
-  unblock.kill((signal = "SIGTERM"));
+  cancelUnblock();
+  // unblock.kill((signal = "SIGTERM"));
+});
+
+ipcMain.on("open-dev-tool", event => {
+  mainWindow.webContents.openDevTools();
 });

@@ -58,17 +58,22 @@
         border-radius: 30px;
         text-align: center;
       }
-      #btn-start {
+      .btn {
         width: 200px;
         height: 30px;
         position: absolute;
         left: 50%;
-        top: 240px;
         transform: translateX(-50%);
         border: 0;
         border-radius: 30px;
         background-color: rgb(255, 101, 101);
         color: #fff;
+      }
+      #btn-start {
+        top: 240px;
+      }
+      #btn-dev {
+        top: 320px;
       }
     </style>
   </head>
@@ -77,7 +82,8 @@
     <div class="address" id="local-address">未开启</div>
     <div class="address" id="network-address">未开启</div>
     <input id="input-port" type="text" value="8080:8081" />
-    <button id="btn-start">开启</button>
+    <button class="btn" id="btn-start">开启</button>
+    <button class="btn" id="btn-dev">开发者工具</button>
     <!-- You can also require other files to run in this process -->
     <script src="./renderer.js"></script>
   </body>

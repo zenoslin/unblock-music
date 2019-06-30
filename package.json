@@ -6,7 +6,7 @@
   "scripts": {
     "start": "electron .",
     "packMac": "electron-packager . --out=out --platform=mas --arch=x64",
-    "packWin": "electron-packager . --platform=win32 --arch=x64"
+    "packWin": "electron-packager . --out=out --platform=win32 --arch=x64"
   },
   "repository": "https://github.com/electron/electron-quick-start",
   "keywords": [
@@ -20,6 +20,6 @@
   "license": "CC0-1.0",
   "devDependencies": {
     "electron": "^5.0.5",
-    "electron-packager": "^14.0.0"
+    "electron-packager": "^13.0.1"
   }
 }

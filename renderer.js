@@ -5,6 +5,7 @@ const networkAddress = document.getElementById("network-address");
 const localAddress = document.getElementById("local-address");
 const btnStart = document.getElementById("btn-start");
 const inputPort = document.getElementById("input-port");
+const btnDev = document.getElementById("btn-dev");
 
 let isStart = false;
 
@@ -35,17 +36,22 @@ btnStart.addEventListener("click", event => {
     ipcRenderer.send("stop-unblock");
   } else {
     ipcRenderer.send("start-unblock", inputPort.value);
+    btnStart.innerHTML = `开启中`;
   }
+});
+
+btnDev.addEventListener("click", event => {
+  ipcRenderer.send("open-dev-tool");
 });
 
 // 子进程启动
 ipcRenderer.on("unblock-begin", (event, message) => {
-  console.log(message);
   localAddress.innerHTML = `http://127.0.0.1:${getPort()}/proxy.pac`;
   networkAddress.innerHTML = `http://${getIPAdress()}:${getPort()}/proxy.pac`;
   isStart = true;
   btnStart.innerHTML = `关闭`;
 });
+
 // 子进程报错
 ipcRenderer.on("unblock-error", (event, message) => {
   isStart = false;

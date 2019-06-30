@@ -2,6 +2,8 @@
 
 一个解锁网易云音乐的小工具
 
+![unblock_1](https://zenoslin.top/laboratory/cdn/wechat/unblock_2.png)
+
 ## To Download
 
 Down [releases](https://github.com/zenoslin/unblock-music/releases)

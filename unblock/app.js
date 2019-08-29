@@ -1,9 +1,17 @@
 #!/usr/bin/env node
+
 const package = require("./package.json");
 const config = require("./cli.js")
-  .program({ name: package.name, version: package.version })
+  .program({
+    name: package.name.replace(/@.+\//, ""),
+    version: package.version
+  })
   .option(["-v", "--version"], { action: "version" })
   .option(["-p", "--port"], { metavar: "port", help: "specify server port" })
+  .option(["-a", "--address"], {
+    metavar: "address",
+    help: "specify server host"
+  })
   .option(["-u", "--proxy-url"], {
     metavar: "url",
     help: "request through upstream proxy"
@@ -19,7 +27,7 @@ const config = require("./cli.js")
   })
   .option(["-t", "--token"], {
     metavar: "token",
-    help: "set up http basic authentication"
+    help: "set up proxy authentication"
   })
   .option(["-e", "--endpoint"], {
     metavar: "url",
@@ -46,14 +54,29 @@ const dns = host =>
     )
   );
 const httpdns = host =>
-  require("./request")("POST", "http://music.httpdns.c.163.com/d", {}, host)
+  require("./request")("POST", "https://music.httpdns.c.163.com/d", {}, host)
     .then(response => response.json())
-    .then(jsonBody => jsonBody.dns[0].ips);
+    .then(jsonBody =>
+      jsonBody.dns.reduce((result, domain) => result.concat(domain.ips), [])
+    );
+const httpdns2 = host =>
+  require("./request")(
+    "GET",
+    "https://httpdns.n.netease.com/httpdns/v2/d?domain=" + host
+  )
+    .then(response => response.json())
+    .then(jsonBody =>
+      Object.keys(jsonBody.data)
+        .map(key => jsonBody.data[key])
+        .reduce((result, value) => result.concat(value.ip || []), [])
+    );
 
 const unblock = function unblock($port, callback) {
+  global.address = config.address;
   config.port = ($port || "8080:8081")
     .split(":")
     .map(string => parseInt(string));
+
   if (config.port.some(invalid)) {
     console.log("Port must be a number higher than 0 and lower than 65535.");
     process.exit(1);
@@ -107,9 +130,9 @@ const unblock = function unblock($port, callback) {
   if (config.endpoint) server.whitelist.push(escape(config.endpoint));
 
   Promise.all(
-    [httpdns(hook.target.host[0])].concat(
-      hook.target.host.map(host => dns(host))
-    )
+    [httpdns, httpdns2]
+      .map(query => query(hook.target.host.join(",")))
+      .concat(hook.target.host.map(host => dns(host)))
   )
     .then(result => {
       let extra = Array.from(
@@ -118,12 +141,16 @@ const unblock = function unblock($port, callback) {
       hook.target.host = hook.target.host.concat(extra);
       server.whitelist = server.whitelist.concat(hook.target.host.map(escape));
       if (port[0]) {
-        server.http.listen(port[0]);
-        console.log(`HTTP Server running @ http://0.0.0.0:${port[0]}`);
+        server.http.listen(port[0], address);
+        console.log(
+          `HTTP Server running @ http://${address || "0.0.0.0"}:${port[0]}`
+        );
       }
       if (port[1]) {
-        server.https.listen(port[1]);
-        console.log(`HTTPS Server running @ https://0.0.0.0:${port[1]}`);
+        server.https.listen(port[1], address);
+        console.log(
+          `HTTPS Server running @ https://${address || "0.0.0.0"}:${port[1]}`
+        );
       }
       if (callback) {
         callback();

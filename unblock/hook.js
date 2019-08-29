@@ -12,6 +12,9 @@ const hook = {
 	connect: {
 		before: () => {}
 	},
+	negotiate: {
+		before: () => {}
+	},
 	target: {
 		host: [],
 		path: []
@@ -24,10 +27,12 @@ hook.target.host = [
 	'interface3.music.163.com',
 	'apm.music.163.com',
 	'apm3.music.163.com',
-	'mam.netease.com',
-	'api.iplay.163.com'
+	// 'mam.netease.com',
+	// 'api.iplay.163.com', // look living
+	// 'ac.dun.163yun.com',
 	// 'crash.163.com',
-	// 'clientlog.music.163.com'
+	// 'clientlog.music.163.com',
+	// 'clientlog3.music.163.com'
 ]
 
 hook.target.path = [
@@ -41,6 +46,7 @@ hook.target.path = [
 	'/api/v1/artist/songs',
 	'/api/artist/top/song',
 	'/api/v1/album',
+	'/api/album/v3/detail',
 	'/api/playlist/privilege',
 	'/api/song/enhance/player/url',
 	'/api/song/enhance/player/url/v1',
@@ -52,18 +58,22 @@ hook.target.path = [
 	'/api/v1/playlist/manipulate/tracks',
 	'/api/song/like',
 	'/api/v1/play/record',
-	'/api/playlist/v4/detail'
+	'/api/playlist/v4/detail',
+	'/api/v1/radio/get',
+	'/api/v1/discovery/recommend/songs'
 ]
 
 hook.request.before = ctx => {
 	const req = ctx.req
-	req.url = (req.url.startsWith('http://') ? '' : (req.socket.encrypted ? 'https:' : 'http:') + '//music.163.com') + req.url
+	req.url = (req.url.startsWith('http://') ? '' : (req.socket.encrypted ? 'https:' : 'http:') + '//' + (hook.target.host.includes(req.headers.host) ? req.headers.host : null)) + req.url
 	const url = parse(req.url)
-	if((hook.target.host.includes(url.hostname)) && req.method == 'POST' && (url.path == '/api/linux/forward' || url.path.startsWith('/eapi/'))){
+	if([url.hostname, req.headers.host].some(host => hook.target.host.includes(host)) && req.method == 'POST' && (url.path == '/api/linux/forward' || url.path.startsWith('/eapi/'))){
 		return request.read(req)
+		.then(body => req.body = body)
 		.then(body => {
-			req.body = body
+			if('x-napm-retry' in req.headers) delete req.headers['x-napm-retry']
 			req.headers['X-Real-IP'] = '118.88.88.88'
+			if(req.url.includes('stream')) return // look living eapi can not be decrypted
 			if(body){
 				let data = null
 				let netease = {}
@@ -87,11 +97,9 @@ hook.request.before = ctx => {
 					return pretendPlay(ctx)
 			}
 		})
-		.catch(error => {
-			console.log(error)
-		})
+		.catch(error => console.log(error, ctx.req.url))
 	}
-	if((hook.target.host.includes(url.hostname)) && url.path.startsWith('/weapi/')){
+	else if((hook.target.host.includes(url.hostname)) && url.path.startsWith('/weapi/')){
 		ctx.req.headers['X-Real-IP'] = '118.88.88.88'
 		ctx.netease = {web: true, path: url.path.replace(/^\/weapi\//, '/api/').replace(/\?.+$/, '').replace(/\/\d*$/, '')}
 	}
@@ -118,15 +126,16 @@ hook.request.after = ctx => {
 	const proxyRes = ctx.proxyRes
 	if(netease && hook.target.path.includes(netease.path) && proxyRes.statusCode == 200){
 		return request.read(proxyRes, true)
+		.then(buffer => proxyRes.body = buffer)
 		.then(buffer => {
-			proxyRes.body = buffer
+			const patch = string => string.replace(/([^\\]"\s*:\s*)(\d{16,})(\s*[}|,])/g, '$1"$2L"$3') // for js precision
 			try{
 				netease.encrypted = false
-				netease.jsonBody = JSON.parse(buffer.toString())
+				netease.jsonBody = JSON.parse(patch(buffer.toString()))
 			}
 			catch(error){
 				netease.encrypted = true
-				netease.jsonBody = JSON.parse(crypto.eapi.decrypt(buffer).toString())
+				netease.jsonBody = JSON.parse(patch(crypto.eapi.decrypt(buffer).toString()))
 			}
 
 			if(netease.path.includes('manipulate') && [401, 512].includes(netease.jsonBody.code) && !netease.web)
@@ -143,10 +152,6 @@ hook.request.after = ctx => {
 
 			const inject = (key, value) => {
 				if(typeof(value) === 'object' && value != null){
-					if('pic_str' in value && 'pic' in value) // for js precision
-						value['pic'] = value['pic_str']
-					if('coverImgId_str' in value && 'coverImgId' in value) // for js precision
-						value['coverImgId'] = value['coverImgId_str']
 					if('fee' in value) value['fee'] = 0
 					if('st' in value && 'pl' in value && 'dl' in value && 'subp' in value){ // batch modify
 						value['st'] = 0
@@ -159,13 +164,18 @@ hook.request.after = ctx => {
 			}
 
 			let body = JSON.stringify(netease.jsonBody, inject)
-			body = body.replace(/"pic":"(\d+)"/g, '"pic":$1')
-			body = body.replace(/"coverImgId":"(\d+)"/g, '"coverImgId":$1')
+			body = body.replace(/([^\\]"\s*:\s*)"(\d{16,})L"(\s*[}|,])/g, '$1$2$3') // for js precision
 			proxyRes.body = (netease.encrypted ? crypto.eapi.encrypt(Buffer.from(body)) : body)
 		})
+		.catch(error => console.log(error, ctx.req.url))
 	}
 	else if(package){
-		if(/p\d+c*.music.126.net/.test(ctx.req.url)){
+		const req = ctx.req
+		if([201, 301, 302, 303, 307, 308].includes(proxyRes.statusCode)){
+			return request(req.method, parse(req.url).resolve(proxyRes.headers.location), req.headers)
+			.then(response => ctx.proxyRes = response)
+		}
+		else if(/p\d+c*.music.126.net/.test(ctx.req.url)){
 			proxyRes.headers['content-type'] = 'audio/mpeg'
 		}
 	}
@@ -173,18 +183,29 @@ hook.request.after = ctx => {
 
 hook.connect.before = ctx => {
 	let url = parse('https://' + ctx.req.url)
-	if(hook.target.host.includes(url.hostname)){
+	if([url.hostname, ctx.req.headers.host].some(host => hook.target.host.includes(host))){
 		if(url.port == 80){
-			ctx.req.url = `localhost:${global.port[0]}`
+			ctx.req.url = `${global.address || 'localhost'}:${global.port[0]}`
 			ctx.req.local = true
 		}
 		else if(global.port[1]){
-			ctx.req.url = `localhost:${global.port[1]}`
+			ctx.req.url = `${global.address || 'localhost'}:${global.port[1]}`
 			ctx.req.local = true
 		}
 		else{
 			ctx.decision = 'blank'
 		}
+	}
+}
+
+hook.negotiate.before = ctx => {
+	let url = parse('https://' + ctx.req.url)
+	let socket = ctx.socket
+	let target = hook.target.host
+	if(ctx.req.local || ctx.decision) return
+	if(target.includes(socket.sni) && !target.includes(url.hostname)){
+		hook.target.host = Array.from(new Set([url.hostname].concat(target)))
+		ctx.decision = 'blank'
 	}
 }
 
@@ -257,7 +278,7 @@ const tryMatch = ctx => {
 		if((item.code != 200 || item.freeTrialInfo) && (target == 0 || item.id == target)){
 			return match(item.id)
 			.then(song => {
-				item.url = `${global.endpoint || 'http://music.163.com'}/package/${crypto.base64.encode(song.url)}/${item.id}.mp3`
+				item.url = global.endpoint ? `${global.endpoint}/package/${crypto.base64.encode(song.url)}/${item.id}.mp3` : song.url
 				item.md5 = song.md5 || crypto.md5.digest(song.url)
 				item.size = song.size
 				item.code = 200
@@ -279,9 +300,9 @@ const tryMatch = ctx => {
 				const task = {key: song.url.replace(/\?.*$/, ''), url: song.url}
 				try{
 					let header = netease.param.header
-					header = typeof header === 'string' ? JSON.parse(header) : header
-					let {os, appver} = header
-					if(os in limit && newer(limit[os], appver))
+					header = typeof(header) === 'string' ? JSON.parse(header) : header
+					let os = header.os, version = header.appver
+					if(os in limit && newer(limit[os], version))
 						return cache(computeHash, task, 7 * 24 * 60 * 60 * 1000).then(value => item.md5 = value)
 				}
 				catch(e){}

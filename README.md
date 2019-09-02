@@ -1,6 +1,7 @@
 # Unblock Music
 
-一个解锁网易云音乐的小工具
+> 声明：本项目仅做学习使用，请勿用于商业
+一个解锁云音乐的小工具
 
 ![unblock_1](https://zenoslin.top/laboratory/cdn/wechat/unblock_2.png)
 

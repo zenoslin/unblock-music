@@ -1,6 +1,6 @@
 {
   "name": "unblock-music",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "a unblock music application",
   "main": "main.js",
   "scripts": {
